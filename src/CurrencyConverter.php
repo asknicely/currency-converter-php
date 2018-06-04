@@ -7,6 +7,11 @@ use CurrencyConverter\Provider\FixerApi;
 class CurrencyConverter implements CurrencyConverterInterface
 {
     /**
+     * @var string https://fixer.io/ api key
+     */
+    private $accessKey = '';
+
+    /**
      * store cache or not
      *
      * @var bool
@@ -79,7 +84,7 @@ class CurrencyConverter implements CurrencyConverterInterface
     public function getRateProvider()
     {
         if (!$this->rateProvider) {
-            $this->setRateProvider(new FixerApi());
+            $this->setRateProvider(new FixerApi($this->accessKey));
         }
 
         return $this->rateProvider;
@@ -151,5 +156,13 @@ class CurrencyConverter implements CurrencyConverterInterface
         }
 
         return $currency;
+    }
+
+    /**
+     * @param string $accessKey
+     */
+    public function setAccessKey($accessKey)
+    {
+        $this->accessKey = $accessKey;
     }
 }
