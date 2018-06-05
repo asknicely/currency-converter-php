@@ -7,7 +7,9 @@ use CurrencyConverter\Provider\FixerApi;
 class CurrencyConverter implements CurrencyConverterInterface
 {
     /**
-     * @var string https://fixer.io/ api key
+     * https://fixer.io/ api key
+     *
+     * @var string
      */
     private $accessKey = '';
 
@@ -17,6 +19,13 @@ class CurrencyConverter implements CurrencyConverterInterface
      * @var bool
      */
     protected $cachable = false;
+
+    /**
+     * Override path to cache conversion statistics
+     *
+     * @var ?string
+     */
+    protected $cachePath;
 
     /**
      * @var Provider\ProviderInterface
@@ -126,7 +135,7 @@ class CurrencyConverter implements CurrencyConverterInterface
     public function getCacheAdapter()
     {
         if (!$this->cacheAdapter) {
-            $this->setCacheAdapter(new Cache\Adapter\FileSystem());
+            $this->setCacheAdapter(new Cache\Adapter\FileSystem($this->cachePath));
         }
 
         return $this->cacheAdapter;
@@ -164,5 +173,10 @@ class CurrencyConverter implements CurrencyConverterInterface
     public function setAccessKey($accessKey)
     {
         $this->accessKey = $accessKey;
+    }
+
+    public function setCachePath($cachePath)
+    {
+        $this->cachePath = $cachePath;
     }
 }
