@@ -36,6 +36,8 @@ class FixerApi implements ProviderInterface
      */
     protected $useHttps = false;
 
+    protected $defaultCurrencies = [];
+
     /**
      * FixerApi constructor.
      * @param string $accessKey
@@ -47,6 +49,18 @@ class FixerApi implements ProviderInterface
         $this->accessKey = $accessKey;
         $this->httpClient = $httpClient ?: new Client();
         $this->useHttps = (bool)$useHttps;
+
+        $this->defaultCurrencies = $this->getRatesFromCsv();
+    }
+
+    private function getRatesFromCsv() {
+        if (!($file = fopen(__DIR__ . '/defaultcurrencies.csv', 'rb'))) {
+            return;
+        }
+
+        while ($line = fgetcsv($file)) {
+            $this->defaultCurrencies[$line[0]] = $line[1];
+        }
     }
 
     /**
@@ -56,17 +70,23 @@ class FixerApi implements ProviderInterface
     {
         $path = sprintf(
             '%s' . self::FIXER_API_BASEPATH . '?access_key=%s&symbols=%s&base=%s',
-            ($this->useHttps) ? 'https://' : 'http://',
+            $this->useHttps ? 'https://' : 'http://',
             $this->accessKey,
             $toCurrency,
             $fromCurrency
         );
         $result = json_decode($this->httpClient->get($path)->getBody(), true);
 
-        if (!isset($result['rates'][$toCurrency])) {
+        $rate = 0;
+
+        if (isset($result['rates'][$toCurrency])) {
+            $rate = $result['rates'][$toCurrency];
+        } else if (isset($this->defaultCurrencies[$toCurrency])) {
+            $rate = $this->defaultCurrencies[$toCurrency];
+        } else {
             throw new UnsupportedCurrencyException(sprintf('Undefined rate for "%s" currency.', $toCurrency));
         }
 
-        return $result['rates'][$toCurrency];
+        return $rate;
     }
 }
